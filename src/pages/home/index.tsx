@@ -1,10 +1,9 @@
-import { useRef, useState, useEffect } from "react"
-import axios from "axios"
+import { useRef, useState, useEffect } from "react";
 
-import AudioRecorder from "../../components/AudioRecorder"
+import Layout from "../../components/Layout";
+import AudioRecorder from "../../components/AudioRecorder";
 
 const Home = () => {
-
     const [recording, setRecording] = useState(false);
     const [timer, setTimer] = useState(0);
     const [audioURL, setAudioURL] = useState<string | null>(null);
@@ -16,12 +15,12 @@ const Home = () => {
             const mediaRecorder = new MediaRecorder(stream);
             const audioChunks: Blob[] = [];
 
-            mediaRecorder.addEventListener('dataavailable', (event) => {
+            mediaRecorder.addEventListener("dataavailable", (event) => {
                 audioChunks.push(event.data);
             });
 
-            mediaRecorder.addEventListener('stop', async () => {
-                const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+            mediaRecorder.addEventListener("stop", async () => {
+                const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
                 const audioDataURL = await convertToDataURL(audioBlob);
                 setAudioURL(audioDataURL);
             });
@@ -30,7 +29,7 @@ const Home = () => {
             mediaRecorder.start();
             setRecording(true);
         } catch (error) {
-            console.error('Error starting recording:', error);
+            console.error("Error starting recording:", error);
         }
     };
 
@@ -45,10 +44,10 @@ const Home = () => {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.onloadend = () => {
-                if (typeof reader.result === 'string') {
+                if (typeof reader.result === "string") {
                     resolve(reader.result);
                 } else {
-                    reject(new Error('Failed to convert audio to data URL.'));
+                    reject(new Error("Failed to convert audio to data URL."));
                 }
             };
             reader.readAsDataURL(blob);
@@ -73,17 +72,29 @@ const Home = () => {
         };
     }, [recording]);
 
-    return (
-        <div className="flex items-center justify-center h-screen">
-            <AudioRecorder
-                id="audio_recording"
-                isRecording={recording}
-                timer={timer}
-                onStart={() => handleStartRecording()}
-                onStop={() => handleStopRecording()}
-            />
-        </div>
-    )
-}
+    const formatTime = (value: number) => {
+        const padZero = (num: number) => String(num).padStart(2, "0");
+        const hours = Math.floor(value / 3600);
+        const minutes = Math.floor((value % 3600) / 60);
+        const seconds = value % 60;
+        return `${padZero(hours)}:${padZero(minutes)}:${padZero(seconds)}`;
+    };
 
-export default Home
+    return (
+        <Layout>
+            <div className="flex justify-center py-8 lg:mx-72">
+                <div className="max-w-3xl w-72 lg:mx-72 lg:my-40">
+                    <AudioRecorder
+                        id="audio_recording"
+                        isRecording={recording}
+                        timer={formatTime(timer)}
+                        onStart={handleStartRecording}
+                        onStop={handleStopRecording}
+                    />
+                </div>
+            </div>
+        </Layout>
+    );
+};
+
+export default Home;
