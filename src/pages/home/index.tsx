@@ -1,4 +1,5 @@
 import { useRef, useState, useEffect } from "react";
+import axios from "axios";
 
 import Layout from "../../components/Layout";
 import AudioRecorder from "../../components/AudioRecorder";
@@ -24,10 +25,10 @@ const Home = () => {
                 const audioDataURL = await convertToDataURL(audioBlob);
                 setAudioURL(audioDataURL);
             });
-
             mediaRecorderRef.current = mediaRecorder;
             mediaRecorder.start();
             setRecording(true);
+            // convertToText(audioURL)
         } catch (error) {
             console.error("Error starting recording:", error);
         }
@@ -39,6 +40,28 @@ const Home = () => {
         }
         setRecording(false);
     };
+
+    const convertToText = async (uri: string | null) => {
+        await axios.post("/stt", {
+            data: {
+
+                "config": {
+                    "engine": "stt-general",
+                    "wait": false,
+                    "include_filler": false,
+                    "include_partial_results": false
+                },
+                "request": {
+                    "label": "Meeting Audio 2021-14-06",
+                    "data": uri
+                }
+
+            },
+            headers: {
+                "x-api-key": `${import.meta.env.VITE_PROSA_KEY}`
+            }
+        })
+    }
 
     const convertToDataURL = (blob: Blob): Promise<string> => {
         return new Promise((resolve, reject) => {
@@ -88,8 +111,8 @@ const Home = () => {
                         id="audio_recording"
                         isRecording={recording}
                         timer={formatTime(timer)}
-                        onStart={handleStartRecording}
-                        onStop={handleStopRecording}
+                        onStart={() => handleStartRecording()}
+                        onStop={() => handleStopRecording()}
                     />
                 </div>
             </div>
