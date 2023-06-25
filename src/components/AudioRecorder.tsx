@@ -3,12 +3,14 @@ import { FC } from 'react';
 interface AudioProps {
     id: string;
     timer: string | number;
+    save: boolean;
     isRecording: boolean;
     onStart: () => void;
     onStop: () => void;
+    onSave: () => void
 }
 
-const AudioRecorder: FC<AudioProps> = ({ id, timer, isRecording, onStart, onStop }) => {
+const AudioRecorder: FC<AudioProps> = ({ id, timer, save, isRecording, onStart, onStop, onSave }) => {
     return (
         <div id={id} className="p-4">
             <div className="relative h-14 mb-4 overflow-hidden">
@@ -31,6 +33,17 @@ const AudioRecorder: FC<AudioProps> = ({ id, timer, isRecording, onStart, onStop
                 >
                     Stop Recording
                 </button>
+                {
+                    save &&
+                    <div className='mt-10'>
+                        <button
+                            className="bg-green-500 hover:bg-green-700 text-white py-2 px-4 rounded"
+                            onClick={onSave}
+                        >
+                            Save
+                        </button>
+                    </div>
+                }
             </div>
         </div>
     );
