@@ -86,17 +86,8 @@ const Home = () => {
           },
         }
       );
-      const status = response?.data?.status;
-      if (status === "queued") {
-        setLoading(true);
-      } else {
-        setLoading(false);
-        Swal.fire({
-          title: "Success",
-          text: "Saving your record!",
-          confirmButtonText: "OK",
-        });
-      }
+      const id = response?.data?.job_id;
+      getStatus(id);
     } catch (error) {
       Swal.fire({
         title: "Something went wrong",
@@ -121,9 +112,33 @@ const Home = () => {
     });
   };
 
+  const getStatus = async (id: string) => {
+    await axios
+      .get(`stt/${id}/status`, {
+        headers: {
+          "x-api-key": `${import.meta.env.VITE_PROSA_KEY}`,
+        },
+      })
+      .then((response) => {
+        const status = response?.data?.status;
+        if (status === "queued") {
+          setLoading(true);
+        } else if (status === "completed") {
+          setLoading(false);
+        }
+      })
+      .catch(() => {
+        Swal.fire({
+          title: "Something went wrong",
+          text: "Please record again!",
+          confirmButtonText: "OK",
+        });
+      });
+  };
+
   useEffect(() => {
     let interval: NodeJS.Timeout | any = null;
-
+    console.log("status : ", status);
     if (recording) {
       interval = setInterval(() => {
         setTimer((prevTimer) => prevTimer + 1);
