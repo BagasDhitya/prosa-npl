@@ -4,9 +4,23 @@ export interface LayoutProps {
   children: React.ReactNode;
 }
 
+export interface SidebarProps {
+  children: React.ReactNode;
+}
+
 export interface ModalProps {
   onClose?: () => void;
   children: React.ReactNode;
+}
+
+export interface CardProps {
+  id: string;
+  title: string;
+  status: string;
+  description?: string;
+  isLoading: boolean;
+  onPlay: () => void;
+  onStop: () => void;
 }
 
 export interface AudioProps {

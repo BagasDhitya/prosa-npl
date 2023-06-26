@@ -1,28 +1,47 @@
-import { useRef, useState, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import Swal from "sweetalert2";
 import axios from "axios";
+import { useFormik } from "formik";
+import * as Yup from "yup";
 
 import Layout from "../../components/Layout";
 import Modal from "../../components/Modal";
 import AudioRecorder from "../../components/AudioRecorder";
-import LoadingSpinner from "../../components/Loading";
+import Sidebar from "../../components/Sidebar";
+import Card from "../../components/Card";
 
 const Home = () => {
-  const [save, setSave] = useState<boolean>(false);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [modalOpen, setModalOpen] = useState<boolean>(false);
-  const [recording, setRecording] = useState<boolean>(false);
-  const [describe, setDescribe] = useState<string>("");
-  const [timer, setTimer] = useState<number>(0);
-  const [audioURL, setAudioURL] = useState<string>("");
-
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const [timer, setTimer] = useState(0);
+
+  const validationSchema = Yup.object().shape({
+    describe: Yup.string().required(
+      "Please enter a description for the recording"
+    ),
+  });
+
+  const formik = useFormik({
+    initialValues: {
+      describe: "",
+      data: {} as any,
+      loading: false,
+      modalOpen: false,
+      recording: false,
+      audioURL: "",
+      save: false,
+    },
+    validationSchema,
+    onSubmit: async (values) => {
+      handleModalClose();
+      await convertToText(values.audioURL, values.describe);
+    },
+  });
 
   const handleStartRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mediaRecorder = new MediaRecorder(stream);
-      const audioChunks: Blob[] = [];
+      const audioChunks: any[] = [];
 
       mediaRecorder.addEventListener("dataavailable", (event) => {
         audioChunks.push(event.data);
@@ -31,11 +50,13 @@ const Home = () => {
       mediaRecorder.addEventListener("stop", async () => {
         const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
         const audioDataURL = await convertToBase64(audioBlob);
-        setAudioURL(audioDataURL);
+        formik.setFieldValue("audioURL", audioDataURL);
       });
+
       mediaRecorderRef.current = mediaRecorder;
       mediaRecorder.start();
-      setRecording(true);
+      formik.setFieldValue("recording", true);
+      setTimer(0); // Reset the timer when recording starts
     } catch (error) {
       console.error("Error starting recording:", error);
     }
@@ -45,26 +66,26 @@ const Home = () => {
     if (mediaRecorderRef.current) {
       mediaRecorderRef.current.stop();
     }
-    setRecording(false);
-    setSave(true);
+    formik.setFieldValue("recording", false);
+    formik.setFieldValue("save", true);
   };
 
   const handleSave = () => {
-    setModalOpen(true);
+    formik.setFieldValue("modalOpen", true);
   };
 
   const handleModalClose = () => {
-    setModalOpen(false);
-    setDescribe("");
-    setSave(false);
+    formik.setFieldValue("modalOpen", false);
+    formik.setFieldValue("describe", "");
+    formik.setFieldValue("save", false);
   };
 
   const handleModalSave = () => {
-    convertToText(audioURL);
+    convertToText(formik.values.audioURL, formik.values.describe);
     handleModalClose();
   };
 
-  const convertToText = async (uri: string) => {
+  const convertToText = async (uri: string, describe: string) => {
     try {
       const response = await axios.post(
         "/stt",
@@ -86,8 +107,13 @@ const Home = () => {
           },
         }
       );
-      const id = response?.data?.job_id;
-      getStatus(id);
+      formik.setFieldValue("data", response.data);
+      const status = response?.data?.status;
+      if (status === "queued" || status === "in_progress") {
+        formik.setFieldValue("loading", true);
+      } else {
+        formik.setFieldValue("loading", false);
+      }
     } catch (error) {
       Swal.fire({
         title: "Something went wrong",
@@ -97,8 +123,8 @@ const Home = () => {
     }
   };
 
-  const convertToBase64 = (blob: Blob): Promise<string> => {
-    return new Promise((resolve, reject) => {
+  const convertToBase64 = (blob: Blob) => {
+    return new Promise<string>((resolve, reject) => {
       const reader = new FileReader();
       reader.onloadend = () => {
         if (typeof reader.result === "string") {
@@ -112,39 +138,16 @@ const Home = () => {
     });
   };
 
-  const getStatus = async (id: string) => {
-    await axios
-      .get(`stt/${id}/status`, {
-        headers: {
-          "x-api-key": `${import.meta.env.VITE_PROSA_KEY}`,
-        },
-      })
-      .then((response) => {
-        const status = response?.data?.status;
-        if (status === "queued") {
-          setLoading(true);
-        } else if (status === "completed") {
-          setLoading(false);
-        }
-      })
-      .catch(() => {
-        Swal.fire({
-          title: "Something went wrong",
-          text: "Please record again!",
-          confirmButtonText: "OK",
-        });
-      });
-  };
-
   useEffect(() => {
-    let interval: NodeJS.Timeout | any = null;
-    console.log("status : ", status);
-    if (recording) {
+    let interval: NodeJS.Timeout | null = null;
+    if (formik.values.recording) {
       interval = setInterval(() => {
         setTimer((prevTimer) => prevTimer + 1);
       }, 1000);
     } else {
-      clearInterval(interval);
+      if (interval) {
+        clearInterval(interval);
+      }
     }
 
     return () => {
@@ -152,7 +155,7 @@ const Home = () => {
         clearInterval(interval);
       }
     };
-  }, [recording]);
+  }, [formik.values.recording]);
 
   const formatTime = (value: number) => {
     const padZero = (num: number) => String(num).padStart(2, "0");
@@ -162,20 +165,37 @@ const Home = () => {
     return `${padZero(hours)}:${padZero(minutes)}:${padZero(seconds)}`;
   };
 
+  console.log("data: ", formik.values.data);
+
   return (
     <Layout>
       <div className="flex justify-center py-8 lg:mx-72">
+        <Sidebar>
+          {formik.values.data.job_id ? (
+            <Card
+              id="record"
+              title={formik.values.data?.request?.label}
+              description={formik.values.data?.created_at}
+              status={formik.values.data?.status}
+              isLoading={formik.values.loading}
+              onPlay={() => console.log("play")}
+              onStop={() => console.log("stop")}
+            />
+          ) : (
+            <></>
+          )}
+        </Sidebar>
         <div className="max-w-3xl w-72 lg:mx-72 lg:my-40">
           <AudioRecorder
             id="audio_recording"
-            isRecording={recording}
+            isRecording={formik.values.recording}
             timer={formatTime(timer)}
-            save={save}
+            save={formik.values.save}
             onStart={() => handleStartRecording()}
             onStop={() => handleStopRecording()}
             onSave={() => handleSave()}
           />
-          {modalOpen && (
+          {formik.values.modalOpen && (
             <Modal>
               <h2 className="font-bold">Save Recording</h2>
               <p className="my-5">
@@ -183,10 +203,17 @@ const Home = () => {
               </p>
               <input
                 type="text"
-                value={describe}
-                onChange={(e) => setDescribe(e.target.value)}
+                name="describe"
+                value={formik.values.describe}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
                 className="bg-white border border-gray-300 rounded-md px-2 py-1 mt-2 w-full"
               />
+              {formik.touched.describe && formik.errors.describe && (
+                <div className="text-red-500 mt-1">
+                  {formik.errors.describe}
+                </div>
+              )}
               <div className="flex justify-end mt-4 gap-x-5">
                 <button
                   onClick={handleModalClose}
@@ -196,16 +223,12 @@ const Home = () => {
                 </button>
                 <button
                   onClick={handleModalSave}
+                  disabled={!formik.isValid || formik.isSubmitting}
                   className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md"
                 >
                   Save
                 </button>
               </div>
-            </Modal>
-          )}
-          {loading === true && (
-            <Modal>
-              <LoadingSpinner />
             </Modal>
           )}
         </div>
