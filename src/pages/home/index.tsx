@@ -9,6 +9,7 @@ import Modal from "../../components/Modal";
 import AudioRecorder from "../../components/AudioRecorder";
 import Sidebar from "../../components/Sidebar";
 import Card from "../../components/Card";
+import BottomNavbar from "../../components/BottomNavbar";
 
 const Home = () => {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -155,7 +156,7 @@ const Home = () => {
         clearInterval(interval);
       }
     };
-  }, [formik.values.recording]);
+  }, [formik.values.recording, formik.values.data.status]);
 
   const formatTime = (value: number) => {
     const padZero = (num: number) => String(num).padStart(2, "0");
@@ -165,25 +166,29 @@ const Home = () => {
     return `${padZero(hours)}:${padZero(minutes)}:${padZero(seconds)}`;
   };
 
-  console.log("data: ", formik.values.data);
+  console.log("data: ", formik.values.data.status);
 
   return (
     <Layout>
       <div className="flex justify-center py-8 lg:mx-72">
         <Sidebar>
-          {formik.values.data.job_id ? (
-            <Card
-              id="record"
-              title={formik.values.data?.request?.label}
-              description={formik.values.data?.created_at}
-              status={formik.values.data?.status}
-              isLoading={formik.values.loading}
-              onPlay={() => console.log("play")}
-              onStop={() => console.log("stop")}
-            />
-          ) : (
-            <></>
-          )}
+          <div className="flex items-center justify-center h-full">
+            {!formik.values.data.job_id ? (
+              <p className="font-bold text-blue-900 text-center">
+                You don't have any recorded file
+              </p>
+            ) : (
+              <Card
+                id="record"
+                title={formik.values.data?.request?.label}
+                description={formik.values.data?.created_at}
+                status={formik.values.data?.status}
+                isLoading={formik.values.loading}
+                onPlay={() => console.log("play")}
+                onStop={() => console.log("stop")}
+              />
+            )}
+          </div>
         </Sidebar>
         <div className="max-w-3xl w-72 lg:mx-72 lg:my-40">
           <AudioRecorder
@@ -233,6 +238,7 @@ const Home = () => {
           )}
         </div>
       </div>
+      <BottomNavbar />
     </Layout>
   );
 };
