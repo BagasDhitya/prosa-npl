@@ -5,15 +5,17 @@ import axios from "axios";
 import Layout from "../../components/Layout";
 import Modal from "../../components/Modal";
 import AudioRecorder from "../../components/AudioRecorder";
+import LoadingSpinner from "../../components/Loading";
 
 const Home = () => {
   const [save, setSave] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
   const [modalOpen, setModalOpen] = useState<boolean>(false);
   const [recording, setRecording] = useState<boolean>(false);
   const [describe, setDescribe] = useState<string>("");
-
   const [timer, setTimer] = useState<number>(0);
   const [audioURL, setAudioURL] = useState<string>("");
+
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
 
   const handleStartRecording = async () => {
@@ -63,10 +65,8 @@ const Home = () => {
   };
 
   const convertToText = async (uri: string) => {
-    console.log(uri);
-    console.log(describe);
-    await axios
-      .post(
+    try {
+      const response = await axios.post(
         "/stt",
         {
           config: {
@@ -85,23 +85,25 @@ const Home = () => {
             "x-api-key": `${import.meta.env.VITE_PROSA_KEY}`,
           },
         }
-      )
-      .then((response) => {
+      );
+      const status = response?.data?.status;
+      if (status === "queued") {
+        setLoading(true);
+      } else {
+        setLoading(false);
         Swal.fire({
           title: "Success",
           text: "Saving your record!",
           confirmButtonText: "OK",
         });
-        console.log(response.data);
-        console.log(response.data.status);
-      })
-      .catch(() => {
-        Swal.fire({
-          title: "Something went wrong",
-          text: "Please record again!",
-          confirmButtonText: "OK",
-        });
+      }
+    } catch (error) {
+      Swal.fire({
+        title: "Something went wrong",
+        text: "Please record again!",
+        confirmButtonText: "OK",
       });
+    }
   };
 
   const convertToBase64 = (blob: Blob): Promise<string> => {
@@ -184,6 +186,11 @@ const Home = () => {
                   Save
                 </button>
               </div>
+            </Modal>
+          )}
+          {loading === true && (
+            <Modal>
+              <LoadingSpinner />
             </Modal>
           )}
         </div>
