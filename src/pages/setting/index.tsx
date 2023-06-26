@@ -1,8 +1,11 @@
 import { useState } from "react";
+import { useCookies } from "react-cookie";
+
 import BottomNavbar from "../../components/BottomNavbar";
 import Layout from "../../components/Layout";
 
 const Setting = () => {
+  const [cookie] = useCookies();
   const [language, setLanguage] = useState("en");
   const [dotPosition, setDotPosition] = useState("left");
 
@@ -15,12 +18,17 @@ const Setting = () => {
     );
   };
 
+  const welcomeMessage = cookie?.username;
+
   return (
     <Layout>
       <div className="flex justify-center py-8">
         <div className="max-w-3xl w-full">
           <div className="bg-white rounded-lg p-6">
             <div className="grid grid-cols-1 gap-3">
+              <h3 className="text-lg font-bold flex my-10 text-blue-900">
+                Hi, {welcomeMessage}!
+              </h3>{" "}
               <h3 className="text-lg font-bold">Language</h3>
               <div>
                 <label

@@ -19,18 +19,29 @@ const Login = () => {
     if (values.username !== "John Doe" && values.password !== "johndoe12345") {
       setCookies("token", uuidv4(), { path: "/" });
       setCookies("username", values.username, { path: "/" });
-      navigate("/home");
+      Swal.fire({
+        title: "Success",
+        icon: "success",
+        text: "Successfully Login",
+        confirmButtonText: "OK",
+      }).then((success) => {
+        if (success) {
+          navigate("/home");
+        }
+      });
     } else {
       Swal.fire({
         title: "Failed",
         icon: "error",
         text: "Please fill your username/password",
         confirmButtonText: "OK",
+      }).then((error) => {
+        if (error) {
+          navigate("/login");
+        }
       });
     }
   };
-
-  console.log("token ", cookie.token);
 
   return (
     <Layout>
