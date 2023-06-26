@@ -112,12 +112,18 @@ const Home = () => {
       const status = response?.data?.status;
       if (status === "queued" || status === "in_progress") {
         formik.setFieldValue("loading", true);
+        Swal.fire({
+          title: "Sorry",
+          icon: "info",
+          text: "Your file was processing on queue, please back after 4 hours later",
+        });
       } else {
         formik.setFieldValue("loading", false);
       }
     } catch (error) {
       Swal.fire({
         title: "Something went wrong",
+        icon: "error",
         text: "Please record again!",
         confirmButtonText: "OK",
       });

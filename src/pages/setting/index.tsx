@@ -9,10 +9,7 @@ const Setting = () => {
   const handleLogout = () => {};
 
   const handleLanguageToggle = () => {
-    // Ubah bahasa yang aktif sesuai dengan keadaan toggle
     setLanguage((prevLanguage) => (prevLanguage === "en" ? "id" : "en"));
-
-    // Ubah posisi dot pointer sesuai dengan bahasa yang aktif
     setDotPosition((prevPosition) =>
       prevPosition === "left" ? "right" : "left"
     );
