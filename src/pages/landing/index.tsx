@@ -1,6 +1,9 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 
 const Landing: React.FC = () => {
+  const navigate: any = useNavigate();
+
   return (
     <div className="grid grid-cols-2 h-full">
       <div className="bg-blue-900 h-screen flex items-center">
@@ -20,7 +23,10 @@ const Landing: React.FC = () => {
             Analyze and understand human language with our advanced Natural
             Language Processing (NLP) application.
           </p>
-          <button className="bg-blue-700 hover:bg-blue-900 text-white font-bold py-2 px-4 mx-10 rounded">
+          <button
+            className="bg-blue-700 hover:bg-blue-900 text-white font-bold py-2 px-4 mx-10 rounded"
+            onClick={() => navigate("/login")}
+          >
             Get Started
           </button>
         </div>
