@@ -1,15 +1,23 @@
 import { useState } from "react";
 import { useCookies } from "react-cookie";
+import { useNavigate } from "react-router-dom";
 
 import BottomNavbar from "../../components/BottomNavbar";
 import Layout from "../../components/Layout";
 
 const Setting = () => {
-  const [cookie] = useCookies();
+  const navigate: any = useNavigate();
+  const [cookie, setCookie, removeCookie] = useCookies();
   const [language, setLanguage] = useState("en");
   const [dotPosition, setDotPosition] = useState("left");
 
-  const handleLogout = () => {};
+  const welcomeMessage = cookie?.username;
+
+  const handleLogout = () => {
+    removeCookie("username");
+    removeCookie("token");
+    navigate("/");
+  };
 
   const handleLanguageToggle = () => {
     setLanguage((prevLanguage) => (prevLanguage === "en" ? "id" : "en"));
@@ -17,8 +25,6 @@ const Setting = () => {
       prevPosition === "left" ? "right" : "left"
     );
   };
-
-  const welcomeMessage = cookie?.username;
 
   return (
     <Layout>
@@ -60,12 +66,12 @@ const Setting = () => {
               <hr className="my-2" />
               <h3 className="text-lg font-bold">About</h3>
               <hr className="my-2" />
-              <h3
-                className="text-lg text-red-500 font-bold"
+              <button
+                className="bg-transparent text-lg text-left text-red-500 hover:border hover:border-transparent focus:outline-none font-bold pl-0"
                 onClick={handleLogout}
               >
                 Logout
-              </h3>
+              </button>
             </div>
           </div>
         </div>
