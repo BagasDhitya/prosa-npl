@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
-import Home from "./pages/home";
+import SpeechToText from "./pages/stt";
+import TextToSpeech from "./pages/tts";
 import Landing from "./pages/landing";
 import Login from "./pages/login";
 import Setting from "./pages/setting";
@@ -11,7 +12,8 @@ const App = () => {
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/home" element={<Home />} />
+        <Route path="/stt" element={<SpeechToText />} />
+        <Route path="/tts" element={<TextToSpeech />} />
         <Route path="/setting" element={<Setting />} />
       </Routes>
     </BrowserRouter>

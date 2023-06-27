@@ -11,7 +11,7 @@ import Sidebar from "../../components/Sidebar";
 import Card from "../../components/Card";
 import BottomNavbar from "../../components/BottomNavbar";
 
-const Home = () => {
+const SpeechToText = () => {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const [timer, setTimer] = useState(0);
 
@@ -249,4 +249,4 @@ const Home = () => {
   );
 };
 
-export default Home;
+export default SpeechToText;
